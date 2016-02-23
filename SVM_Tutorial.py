@@ -5,14 +5,13 @@ from sklearn import svm
 digits = datasets.load_digits()
 
 clf = svm.SVC(gamma = 0.001, C = 100)
+# gamma is learning rate or you can gradient descent
 
-print(len(digits.data))
-
-x,y = digits.data[:-1], digits.target[:-1]
+x,y = digits.data[:-10], digits.target[:-10]
 
 clf.fit(x,y)
 
-print("predictions:", clf.predict(digits.data[-1]))
+print 'prediction:' , clf.predict(digits.data[-4])
 
-plt.imshow(digits.images[-1], cmap = plt.cm.gray_r, interpolation="nearest")
+plt.imshow(digits.images[-4], cmap = plt.cm.gray_r, interpolation="nearest")
 plt.show()

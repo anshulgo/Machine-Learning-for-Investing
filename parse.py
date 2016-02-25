@@ -2,6 +2,14 @@ import pandas as pd
 import os
 import time
 from datetime import datetime
+from time import mktime
+
+import matplotlib
+import matplotlib.pyplot as plt
+
+import re
+
+
 
 path = "/home/anshul/Machine-Learning-for-Investing/intraQuarter"
 
@@ -15,8 +23,12 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
 								'Price',
 								'stock_p_change',
 								'SP 500',
-								'sp500_p_change'])
+								'sp500_p_change',
+								'Difference'])
+
+# Difference is a feature used for comparison SP500 with stock that whether the stock oupterforms the market or not
 	
+
 	sp500_df = pd.DataFrame.from_csv("YAHOO-INDEX_GSPC.csv")
 
 	ticker_list = []
@@ -39,8 +51,18 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
 				# print full_file_path
 				source = open(full_file_path,'r').read()
 				try:
-					value = float(source.split(gather + ':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
-					 
+					try:
+						value = float(source.split(gather + ':</td><td class="yfnc_tabledata1">')[1].split('</td>')[0])
+					except Exception as e:
+						try:
+							value = source.split(gather + ':</td>')[1].split('</td>')[0]
+							value = re.findall("\d+\.\d+",value)[0]
+							value = float(value)
+						except Exception as e:
+							# pass
+							value = source.split(gather + ':</td>')[1].split('</td>')[0]
+							print "a", value
+							print e,ticker,file
 					try:
 					 	sp500_date = datetime.fromtimestamp(unix_time).strftime('%Y-%m-%d')
 					 	row = sp500_df[(sp500_df.index == sp500_date)]
@@ -50,7 +72,22 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
 					 	row = sp500_df[(sp500_df.index == sp500_date)]
 					 	sp500_value = float(row["Adj Close"])
 
-					stock_price = float(source.split('</small><big><b>')[1].split('</b></big>')[0])
+					try:
+						stock_price = float(source.split('</small><big><b>')[1].split('</b></big>')[0])
+					except Exception as e:
+						try:
+							stock_price = source.split('</small><big><b>')[1].split('</b></big>')[0]
+							stock_price = re.findall("\d+\.\d+",stock_price)[0]
+							stock_price = float(stock_price)
+						except Exception as e:
+							try:
+								stock_price = source.split('<span class="time_rtq_ticker">')[1].split('</span></span>')[0]
+								stock_price = re.findall("\d+\.\d+",stock_price)[0]
+								stock_price = float(stock_price)
+							except Exception as e:
+								pass
+								# print e,ticker,file
+
 					# print 'Stock price: ' ,stock_price, 'ticker', ticker 
 					if not starting_stock_value:
 						starting_stock_value = stock_price
@@ -68,10 +105,26 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
 									'Price' : stock_price,
 									'stock_p_change' : stock_p_change,
 									'SP 500' : sp500_value,
-									'sp500_p_change' : sp500_p_change}, ignore_index = True)
-				except:
-					pass
+									'sp500_p_change' : sp500_p_change,
+									'Difference' : stock_p_change - sp500_p_change}, ignore_index = True)
+				except Exception as e:
+					# print e
+					pass	
 				# print ticker + ": " + value
+	for each_ticker in ticker_list:
+		try:
+			plot_df = df[(df['Ticker'] == each_ticker)]
+			plot_df = plot_df.set_index(['Date'])
+			# set_index groups the column(show single entry for multiple entries) and if we give two or more columns than only the last column would be fully expanded and others would be grouped.		
+			# in our case it is working as index or x-axis
+			plot_df['Difference'].plot(label=each_ticker)
+			plt.legend()
+
+		except:
+			pass
+
+
+	plt.show()
 	save = gather.replace(' ','').replace(')','').replace('(','').replace('/','') + '.csv'
 	print save
 	df.to_csv(save)	

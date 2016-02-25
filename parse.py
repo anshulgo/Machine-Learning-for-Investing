@@ -8,7 +8,7 @@ path = "/home/anshul/Machine-Learning-for-Investing/intraQuarter"
 def Key_Stats(gather = "Total Debt/Equity (mrq)"):
 	stats_path = path + "/_KeyStats"
 	stock_list = [x[0] for x in os.walk(stats_path)]
-	df = pd.DataFrame(columns = ['Date','Unix','Ticker','DE Ratio'])
+	df = pd.DataFrame(columns = ['Date','Unix','Ticker','DE Ratio','Price','SP 500'])
 	
 	sp500_df = pd.DataFrame.from_csv("YAHOO-INDEX_GSPC.csv")
 

@@ -8,13 +8,29 @@ path = "/home/anshul/Machine-Learning-for-Investing/intraQuarter"
 def Key_Stats(gather = "Total Debt/Equity (mrq)"):
 	stats_path = path + "/_KeyStats"
 	stock_list = [x[0] for x in os.walk(stats_path)]
-	df = pd.DataFrame(columns = ['Date','Unix','Ticker','DE Ratio','Price','SP 500'])
+	df = pd.DataFrame(columns = ['Date',
+								'Unix',
+								'Ticker',
+								'DE Ratio',
+								'Price',
+								'stock_p_change',
+								'SP 500',
+								'sp500_p_change'])
 	
 	sp500_df = pd.DataFrame.from_csv("YAHOO-INDEX_GSPC.csv")
+
+	ticker_list = []
 
 	for each_dir in stock_list[1:]:
 		each_file = os.listdir(each_dir)
 		ticker = each_dir.rsplit("/")[6]
+		ticker_list.append(ticker)
+
+# Because each time if we enter a new directory there won't be any percentage change
+		starting_stock_value = False
+		starting_sp500_value = False
+
+
 		if len(each_file) > 0:
 			for file in each_file:			
 				date_stamp = datetime.strptime(file, '%Y%m%d%H%M%S.html')
@@ -36,13 +52,23 @@ def Key_Stats(gather = "Total Debt/Equity (mrq)"):
 
 					stock_price = float(source.split('</small><big><b>')[1].split('</b></big>')[0])
 					# print 'Stock price: ' ,stock_price, 'ticker', ticker 
-				
+					if not starting_stock_value:
+						starting_stock_value = stock_price
+					if not starting_sp500_value:
+						starting_sp500_value = sp500_value
+
+
+					stock_p_change = ((stock_price - starting_stock_value)/starting_stock_value)*100
+					sp500_p_change = ((sp500_value - starting_sp500_value)/starting_sp500_value)*100
+
 					df = df.append({'Date' : date_stamp,
 									'Unix' : unix_time,
 									'Ticker' : ticker,
 									'DE Ratio' : value,
 									'Price' : stock_price,
-									'SP 500' : sp500_value}, ignore_index = True)
+									'stock_p_change' : stock_p_change,
+									'SP 500' : sp500_value,
+									'sp500_p_change' : sp500_p_change}, ignore_index = True)
 				except:
 					pass
 				# print ticker + ": " + value
